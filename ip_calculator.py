@@ -2,6 +2,7 @@
 
 
 # Test against : http://jodies.de/ipcalc
+# https://erikberg.com/notes/networks.html
 
 # Part 1
 def get_class_stats(ip_addr):
@@ -52,15 +53,82 @@ def get_class_stats(ip_addr):
     print(f"First Address: {first_ip_decimal}")
     print(f"Last Address: {last_ip_decimal}")
 
-        
 
 
-# Part 2
+
+# Part 2 --> takes Class C address
 def get_subnet_stats(ip_addr, subnet_mask):
-    pass
+    """OUTPUTS:
+    - IP_ADDR CIDR NOTATION
+    - # SUBNETS ON NETWORK
+    - # ADDRESSABLE HOSTS PER SUBNET
+    - VALID SUBNETS
+    - BROADCAST ADDRESS OF EACH SUBNET
+    - VALID HOSTS ON EACH SUBNET
+    """
+    # get CIDR notation
+    subnet_mask_binary = "".join(to_binary_string(subnet_mask))
+    subnet_cidr = sum([int(bit) for bit in subnet_mask_binary]) # possibly make function for these?
 
+    # Calculate # subnets on network
+    num_subnets = 2 ** (subnet_cidr % 8)
 
-# Part 3 --> Extend the above
+    # hosts
+    unmasked_bits = 32 - subnet_cidr
+    num_hosts_per_subnet = (2 ** unmasked_bits) - 2
+
+    # calculate valid subnets (break down into function)
+    for index, n in enumerate(subnet_mask.split(".")): # get subnet mask
+        if int(n) < 255:
+            mask_value = int(n)
+            block_size = 256 - int(n)
+            break
+
+    valid_subnets = []
+    subnet_base_ip = ip_addr.split(".")
+
+    i = 0
+    while i <= mask_value:
+        subnet_base_ip[index] = str(i)
+        valid_subnets.append(".".join(subnet_base_ip))
+        i += block_size
+
+    # calculate broadcast addresses
+    broadcast_addresses = []
+    broadcast_addr_value = block_size - 1
+    subnet_base_ip = ip_addr.split(".") # reset subnet_base_ip
+
+    while (broadcast_addr_value) <= 255:
+        subnet_base_ip[index] = str(broadcast_addr_value)
+        remaining_bytes = index
+        while remaining_bytes < len(subnet_base_ip) - 1:
+            subnet_base_ip[index + 1] = str(255)
+            remaining_bytes += 1
+        broadcast_addresses.append(".".join(subnet_base_ip))
+        broadcast_addr_value += block_size
+
+    # get first addresses
+    first_addresses = []
+    for entry in valid_subnets:
+        entry = entry.split(".")
+        entry[-1] = str(1)
+        first_addresses.append(".".join(entry))
+
+    # get last addresses
+    last_addresses = []
+    for entry in broadcast_addresses:
+        entry = entry.split(".")
+        entry[-1] = str(int(entry[-1]) - 1)
+        last_addresses.append(".".join(entry))
+
+    # print all info
+    print(f"Address: {ip_addr}/{subnet_cidr}")
+    print(f"Subnets: {num_subnets}")
+    print(f"Addressable hosts per subnet: {num_hosts_per_subnet}")
+    print(f"Valid Subnets: {valid_subnets}")
+    print(f"Broadcast Addresses: {broadcast_addresses}")
+    print(f"First Addresses: {first_addresses}")
+    print(f"Last Addresses: {last_addresses}")
 
 
 # Part 4
@@ -110,9 +178,18 @@ def to_decimal_dot(ip_addr_list):
 
 
 def main():
-    get_class_stats("136.206.19.9")
-    print("#######################")
-    get_class_stats("224.192.16.5")
+
+    # PART 1
+    #get_class_stats("136.206.19.9")
+    #print("#######################")
+    #get_class_stats("224.192.16.5")
+    #print("#######################")
+
+    # PART 2
+    get_subnet_stats("192.168.10.0","255.255.255.192")
+    print("#################")
+    print("CLASS B")
+    get_subnet_stats("172.16.0.0", "255.255.192.0")
 
 if __name__ == "__main__":
     main()
