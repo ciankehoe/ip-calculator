@@ -111,7 +111,7 @@ def get_subnet_stats(ip_addr, subnet_mask):
     first_addresses = []
     for entry in valid_subnets:
         entry = entry.split(".")
-        entry[-1] = str(1)
+        entry[-1] = str(int(entry[-1]) + 1)
         first_addresses.append(".".join(entry))
 
     # get last addresses
@@ -124,11 +124,11 @@ def get_subnet_stats(ip_addr, subnet_mask):
     # print all info
     print(f"Address: {ip_addr}/{subnet_cidr}")
     print(f"Subnets: {num_subnets}")
-    print(f"Addressable hosts per subnet: {num_hosts_per_subnet}")
-    print(f"Valid Subnets: {valid_subnets}")
-    print(f"Broadcast Addresses: {broadcast_addresses}")
-    print(f"First Addresses: {first_addresses}")
-    print(f"Last Addresses: {last_addresses}")
+    print(f"Addressable hosts per subnet: {num_hosts_per_subnet}\n")
+    print(f"Valid Subnets: {valid_subnets}\n")
+    print(f"Broadcast Addresses: {broadcast_addresses}\n")
+    print(f"First Addresses: {first_addresses}\n")
+    print(f"Last Addresses: {last_addresses}\n")
 
 
 # Part 4
@@ -189,7 +189,7 @@ def main():
     get_subnet_stats("192.168.10.0","255.255.255.192")
     print("#################")
     print("CLASS B")
-    get_subnet_stats("172.16.0.0", "255.255.192.0")
+    get_subnet_stats("172.16.0.0", "255.255.255.252")
 
 if __name__ == "__main__":
     main()
