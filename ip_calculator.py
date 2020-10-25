@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 
 # Test against : http://jodies.de/ipcalc
 # https://erikberg.com/notes/networks.html
@@ -14,46 +15,78 @@ def get_class_stats(ip_addr):
     - # FIRST IP FOR CLASS
     - # LAST IP FOR CLASS
     """
+
+    # create binary representation of ip_addr
     binary_rep = to_binary_string(ip_addr)
 
-    # calculate IP address' network class
+    # get the first 4 bit of the address
     prefix_nibble = binary_rep[0][:4]
-    ip_addr_class = chr(sum(int(bit) for bit in prefix_nibble) + 65)
+
+    # find the index of the first 0 in the nibble
+    index = prefix_nibble.find("0")
+
+    # set our prefix bits to be all bits up to and
+    # including our first 0. This let's us determine
+    # what class of network the IP is from.
+    prefix_bits = prefix_nibble[:index + 1]
+
+    # calculate IP address' network class
+    ip_addr_class = chr(index + 65)
 
     if (ip_addr_class == "D") or (ip_addr_class == "E"):
         class_num_networks = "N/A"
         num_addressable_hosts = "N/A"
     else:
-        # calculate  # NETWORKS FOR CLASS
-        # get's the # network bits for class
-        num_network_bits = ord(ip_addr_class) - 64
-        # calculate subnet mask size for given class
-        subnet_mask_size = num_network_bits * 8
-        class_num_networks = 2 ** (subnet_mask_size - num_network_bits)
+        # let our (index + 1) be set as an ID
+        # in order to represent classes.
+        # 1 --> A
+        # 2 --> B
+        # 3 --> C
+        # This makes it easier to perform the following
+        # calcualtions.
+        network_class_id = index + 1
 
-        # HOSTS FOR CLASS
-        num_addressable_hosts = 2 ** subnet_mask_size
+        # Calculate the # Network for a class.
+        #
+        # get the # network bits for class.
+        num_network_bits = ((network_class_id) * 8) - (network_class_id)
 
-    # GET CLASS RANGE
-    # FIRST IP (START OF RANGE)
-    #first_ip_binary = (str(prefix_nibble) + "0000" + (".00000000" * 3)).split(".")
+        # get the number of networks for class.
+        class_num_networks = 2 ** (num_network_bits)
+
+        # Calculate the # Hosts for class.
+
+        # subtract the number of network bits from 4 (4 represents the
+        # number of bytes in an IPv4 address) i.e get the number of host
+        # bits for a class by multiplying the number of free bytes possible
+        # (1-3) by 8 (the number of bits per byte) and as
+        # such, the number of unique hosts possible.
+        num_addressable_hosts = 2 ** ((4 - (network_class_id)) * 8)
+
+    # Calculate the range of addresses for class.
+    #
+    # Calculate first address (START OF RANGE).
+    # Simply append 0's to the end of the prefix nibble.
+    # I.e setting all bits after the prefix to 0.
     first_ip_binary = [str(prefix_nibble) + "0000"] + ["00000000"]*3
-    # convert to list
-    #first_ip_binary = [first_ip_binary[i:i+8] for i in range(0, 32, 8)]
-    # convert first IP address to decimal dot notation
+
+    # convert first address in range to decimal dot notation.
     first_ip_decimal = to_decimal_dot(first_ip_binary)
 
-    # LAST IP (END OF RANGE)
-    last_ip_binary = [str(prefix_nibble) + "1111"] + ["11111111"]*3
+    # Calculate last address (END OF RANGE).
+    # Simply append 1's to the end of the class prefix bits, creating
+    # the 32 bit binary representation of the address.
+    last_ip_binary = [str(prefix_bits) + ("1" * (8 - len(prefix_bits)))] + ["11111111"]*3
+
+    # convert first address in range to decimal dot notation.
     last_ip_decimal = to_decimal_dot(last_ip_binary)
 
+    # Print all details.
     print(f"Class: {ip_addr_class}")
     print(f"Network: {class_num_networks}")
     print(f"Host: {num_addressable_hosts}")
     print(f"First Address: {first_ip_decimal}")
     print(f"Last Address: {last_ip_decimal}")
-
-
 
 
 # Part 2 --> takes Class C address
@@ -133,7 +166,22 @@ def get_subnet_stats(ip_addr, subnet_mask):
 
 # Part 4
 def get_supernet_stats(list_addresses):
-    pass
+    list_addresses = ["".join(to_binary_string(entry)) for entry in list_addresses]
+
+    longest_common_prefix = os.path.commonprefix(list_addresses)
+    network_prefix_size = len(longest_common_prefix)
+
+    # get full supernet address into binary string
+    supernet_address = (longest_common_prefix) + ("0" * (32 - len(longest_common_prefix)))
+    # get full supernet mask in binary
+    supernet_mask = ("1" * len(longest_common_prefix)) + ("0" * (32 - len(longest_common_prefix)))
+
+    # split binary string representations of supernet address and mask into list of binary bytes (maybe helper method)
+    supernet_address = to_decimal_dot([(supernet_address[i:i+8]) for i in range(0, len(supernet_address), 8)])
+    supernet_mask = to_decimal_dot([(supernet_mask[i:i+8]) for i in range(0, len(supernet_mask), 8)])
+
+    print(f"Address: {supernet_address}/{network_prefix_size}")
+    print(f"Network Mask: {supernet_mask}")
 
 
 # Helper functions
@@ -178,18 +226,16 @@ def to_decimal_dot(ip_addr_list):
 
 
 def main():
-
-    # PART 1
-    #get_class_stats("136.206.19.9")
-    #print("#######################")
-    #get_class_stats("224.192.16.5")
-    #print("#######################")
-
     # PART 2
-    get_subnet_stats("192.168.10.0","255.255.255.192")
-    print("#################")
-    print("CLASS B")
-    get_subnet_stats("172.16.0.0", "255.255.255.252")
+    #get_subnet_stats("192.168.10.0","255.255.255.192")
+    #print("#################")
+    #print("CLASS B")
+    #get_subnet_stats("172.16.0.0", "255.255.255.252")
+    #get_subnet_stats("136.206.16.0", "255.255.255.192")
+
+
+    # PART 4
+    #get_supernet_stats(["205.100.0.0","205.100.1.0","205.100.2.0","205.100.3.0"])
 
 if __name__ == "__main__":
     main()
