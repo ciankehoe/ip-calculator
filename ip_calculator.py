@@ -98,7 +98,7 @@ def get_class_stats(ip_addr):
     return [ip_addr_class, class_num_networks, num_addressable_hosts, first_ip_decimal, last_ip_decimal]
 
 
-# Part 2 --> takes Class C address
+# Part 2 / 3
 def get_subnet_stats(ip_addr, subnet_mask):
     """
     Take in an IP address and subnet mask, print/return the 
@@ -278,6 +278,7 @@ def get_subnet_stats(ip_addr, subnet_mask):
     return [f"{ip_addr}/{subnet_cidr}", num_subnets, num_hosts_per_subnet, valid_subnets, broadcast_addresses, first_addresses, last_addresses]
 
 
+# Part 4
 def get_supernet_stats(list_addresses):
     """
     Take a list of (contiguous) addresses in string
@@ -317,7 +318,6 @@ def get_supernet_stats(list_addresses):
 
 
 # Helper functions
-
 def to_binary_string(ip_addr):
     """
     Converts an ip address represented as a string in decimal dot
@@ -357,18 +357,12 @@ def to_decimal_dot(ip_addr_list):
     return ".".join([str(int(x,2)) for x in ip_addr_list])
 
 
-#def main():
-#    # this is the cunty one
-#    #get_subnet_stats("136.10.0.0","255.255.255.224")
-#    get_class_stats()
-#    get_subnet_stats()
-#    get_supernet_stats()
-#    # PART 4
-#    #get_supernet_stats(["205.100.0.0","205.100.1.0","205.100.2.0","205.100.3.0"])
-#    #get_supernet_stats(["138.188.0.0","138.189.0.0","138.190.0.0","138.191.0.0"])
+# def main():
+#     pass
 
 
 if __name__ == "__main__":
-    get_class_stats("192.168.0.1")
+    #main()
+    get_class_stats("192.168.2.1")
     get_subnet_stats("136.10.0.0","255.255.255.224")
     get_supernet_stats(["205.100.0.0","205.100.1.0","205.100.2.0","205.100.3.0"])

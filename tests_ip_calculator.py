@@ -20,9 +20,6 @@ class GetClassStatsTestCase(unittest.TestCase):
 
 class GetSubnetStatsTestCase(unittest.TestCase):
 
-    #def test_class_A_network(self):
-    #    self.assertEqual(ip_calculator.get_subnet_stats())
-
     def test_class_B_network(self):
         self.assertEqual(ip_calculator.get_subnet_stats("172.16.0.0","255.255.192.0"), ['172.16.0.0/18', 4, 16382,
                                                                                         ['172.16.0.0', '172.16.64.0', '172.16.128.0', '172.16.192.0'],
@@ -37,10 +34,25 @@ class GetSubnetStatsTestCase(unittest.TestCase):
                                                                                             ['192.168.10.1', '192.168.10.65', '192.168.10.129', '192.168.10.193'],
                                                                                             ['192.168.10.62', '192.168.10.126', '192.168.10.190', '192.168.10.254']])
 
+class GetSupernetStatsTestCase(unittest.TestCase):
+
+    def test_class_C_addresses_1(self):
+        self.assertEqual(ip_calculator.get_supernet_stats(["205.100.0.0","205.100.1.0","205.100.2.0","205.100.3.0"]), ["205.100.0.0/22", "255.255.252.0"])
+
+    def test_class_C_addresses_2(self):
+        self.assertEqual(ip_calculator.get_supernet_stats(["192.168.0.0","192.168.1.0"]), ["192.168.0.0/23", "255.255.254.0"])
+
+    def test_class_A_addresses(self):
+        self.assertEqual(ip_calculator.get_supernet_stats(["10.4.0.0", "10.5.0.0", "10.6.0.0", "10.7.0.0"]), ["10.4.0.0/14", "255.252.0.0"])
+
+    def test_class_B_addresses(self):
+        self.assertEqual(ip_calculator.get_supernet_stats(["136.206.18.0", "136.207.18.0", "136.208.18.0", "136.209.18.0"]), ["136.192.0.0/11", "255.224.0.0"])
+
 suite1 = unittest.TestLoader().loadTestsFromTestCase(GetClassStatsTestCase)
 suite2 = unittest.TestLoader().loadTestsFromTestCase(GetSubnetStatsTestCase)
+suite3 = unittest.TestLoader().loadTestsFromTestCase(GetSupernetStatsTestCase)
 
-alltests = unittest.TestSuite([suite1, suite2])
+alltests = unittest.TestSuite([suite1, suite2, suite3])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
