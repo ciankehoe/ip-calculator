@@ -2,9 +2,6 @@
 
 import os
 
-# Test against : http://jodies.de/ipcalc
-# https://erikberg.com/notes/networks.html
-
 # Part 1
 def get_class_stats(ip_addr):
     """takes ip_addr (string)
@@ -20,15 +17,19 @@ def get_class_stats(ip_addr):
     binary_rep = to_binary_string(ip_addr)
 
     # get the first 4 bit of the address
-    prefix_nibble = binary_rep[0][:4]
+    # prefix_nibble = binary_rep[0][:4]
 
-    # find the index of the first 0 in the nibble
-    index = prefix_nibble.find("0")
+    # join the list of bytes into a single
+    # string of bits
+    binary_rep = "".join(binary_rep)
+
+    # find the index of the first 0 in the address
+    index = binary_rep.find("0")
 
     # set our prefix bits to be all bits up to and
     # including our first 0. This let's us determine
     # what class of network the IP is from.
-    prefix_bits = prefix_nibble[:index + 1]
+    prefix_bits = binary_rep[:index + 1]
 
     # calculate IP address' network class
     ip_addr_class = chr(index + 65)
@@ -68,7 +69,8 @@ def get_class_stats(ip_addr):
     # Calculate first address (START OF RANGE).
     # Simply append 0's to the end of the prefix nibble.
     # I.e setting all bits after the prefix to 0.
-    first_ip_binary = [str(prefix_nibble) + "0000"] + ["00000000"]*3
+    #first_ip_binary = [str(prefix_nibble) + "0000"] + ["00000000"]*3
+    first_ip_binary = [str(prefix_bits) + ("0" * (8 - len(prefix_bits)))] + ["00000000"]*3
 
     # convert first address in range to decimal dot notation.
     first_ip_decimal = to_decimal_dot(first_ip_binary)
@@ -88,6 +90,8 @@ def get_class_stats(ip_addr):
     print(f"First Address: {first_ip_decimal}")
     print(f"Last Address: {last_ip_decimal}")
 
+    return [ip_addr_class, class_num_networks, num_addressable_hosts, first_ip_decimal, last_ip_decimal]
+
 
 # Part 2 --> takes Class C address
 def get_subnet_stats(ip_addr, subnet_mask):
@@ -105,6 +109,7 @@ def get_subnet_stats(ip_addr, subnet_mask):
 
     # Calculate # subnets on network
     num_subnets = 2 ** (subnet_cidr % 8)
+    #num_subnets = 2 ** ((32 - subnet_cidr) % 8)
 
     # hosts
     unmasked_bits = 32 - subnet_cidr
@@ -136,6 +141,9 @@ def get_subnet_stats(ip_addr, subnet_mask):
         remaining_bytes = index
         while remaining_bytes < len(subnet_base_ip) - 1:
             subnet_base_ip[index + 1] = str(255)
+            # if it's a class A address
+            if index == 1:
+                subnet_base_ip[index + 2] = str(255)
             remaining_bytes += 1
         broadcast_addresses.append(".".join(subnet_base_ip))
         broadcast_addr_value += block_size
@@ -161,8 +169,11 @@ def get_subnet_stats(ip_addr, subnet_mask):
     print(f"Valid Subnets: {valid_subnets}\n")
     print(f"Broadcast Addresses: {broadcast_addresses}\n")
     print(f"First Addresses: {first_addresses}\n")
-    print(f"Last Addresses: {last_addresses}\n")
+    print(f"Last Addresses: {last_addresses}")
 
+    print([f"{ip_addr}/{subnet_cidr}", num_subnets, num_hosts_per_subnet, valid_subnets, broadcast_addresses, first_addresses, last_addresses])
+
+    return [f"{ip_addr}/{subnet_cidr}", num_subnets, num_hosts_per_subnet, valid_subnets, broadcast_addresses, first_addresses, last_addresses]
 
 # Part 4
 def get_supernet_stats(list_addresses):
@@ -187,55 +198,63 @@ def get_supernet_stats(list_addresses):
 # Helper functions
 
 def to_binary_string(ip_addr):
- """
- Converts an ip address represented as a string in decimal dot
-Assignment_1.md 10/11/2020
-5 / 6
-notation into a list of
- four binary strings
- each representing one byte of the address
- :param ip_addr: The ip address as a string in decimal dot notation
-e.g. "132.206.19.7"
- :return: An array of four binary strings each representing one byte
-of ip_addr e.g.
- ['10000100', '11001110', '00010011', '00000111']
- """
- #split into array of four ["136","206","19","9"]
- byte_split = ip_addr.split(".")
- # convert each number into a int, format it as binary, turn it back into a string
- # and return it as an array, isn't python great !
- return ['{0:08b}'.format(int(x)) for x in byte_split]
+    """
+    Converts an ip address represented as a string in decimal dot
+    Assignment_1.md 10/11/2020
+    5 / 6
+    notation into a list of
+    four binary strings
+    each representing one byte of the address
+    :param ip_addr: The ip address as a string in decimal dot notation
+    e.g. "132.206.19.7"
+    :return: An array of four binary strings each representing one byte
+    of ip_addr e.g.
+    ['10000100', '11001110', '00010011', '00000111']
+    """
+    # split into array of four ["136","206","19","9"]
+    byte_split = ip_addr.split(".")
+    # convert each number into a int, format it as binary, turn it back into a string
+    # and return it as an array, isn't python great !
+    return ['{0:08b}'.format(int(x)) for x in byte_split]
 
 
 def to_decimal_dot(ip_addr_list):
- """
- Take in an array of four strings represting the bytes of an ip address
- and convert it back into decimal dot notation
- :param ip_addr_list: An array of four binary strings each
- representing one byte of ip_addr e.g. ['10000100', '11001110',
-'00010011', '00000111']
- :return: The ip address as a string in decimal dot notation e.g.
-'132.206.19.7'
- """
- # for each string in the list
- # use str(int(x,2)) to convert it into a decimal number
- # and then turn that number into a string e.g. '10000100' -> '132'
- # put all converted numbers into a list ["132","206","19","7"]
- # call ".".join on the list to merge them into a string separated by "."
- return ".".join([str(int(x,2)) for x in ip_addr_list])
+    """
+    Take in an array of four strings represting the bytes of an ip address
+    and convert it back into decimal dot notation
+    :param ip_addr_list: An array of four binary strings each
+    representing one byte of ip_addr e.g. ['10000100', '11001110',
+    '00010011', '00000111']
+    :return: The ip address as a string in decimal dot notation e.g.
+    '132.206.19.7'
+    """
+    # for each string in the list
+    # use str(int(x,2)) to convert it into a decimal number
+    # and then turn that number into a string e.g. '10000100' -> '132'
+    # put all converted numbers into a list ["132","206","19","7"]
+    # call ".".join on the list to merge them into a string separated by "."
+    return ".".join([str(int(x,2)) for x in ip_addr_list])
 
 
 def main():
     # PART 2
-    #get_subnet_stats("192.168.10.0","255.255.255.192")
-    #print("#################")
+    get_subnet_stats("192.168.0.0","255.255.192.0")
+
     #print("CLASS B")
     #get_subnet_stats("172.16.0.0", "255.255.255.252")
-    #get_subnet_stats("136.206.16.0", "255.255.255.192")
+    
+    #get_subnet_stats("138.188.0.0", "255.252.0.0")
+    #get_subnet_stats("136.24.0.0", "255.255.192.0") # works
+
+    #get_subnet_stats("172.16.0.0", "255.255.192.0")
+    #get_subnet_stats("172.16.0.0", "255.255.255.240")
+
 
 
     # PART 4
     #get_supernet_stats(["205.100.0.0","205.100.1.0","205.100.2.0","205.100.3.0"])
+    #get_supernet_stats(["138.188.0.0","138.189.0.0","138.190.0.0","138.191.0.0"])
+
 
 if __name__ == "__main__":
     main()
