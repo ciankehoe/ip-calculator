@@ -103,13 +103,23 @@ def get_subnet_stats(ip_addr, subnet_mask):
     - BROADCAST ADDRESS OF EACH SUBNET
     - VALID HOSTS ON EACH SUBNET
     """
+    index = "".join(to_binary_string(ip_addr)).find("0")
+    ip_addr_class = (chr(index + 65))
+
     # get CIDR notation
     subnet_mask_binary = "".join(to_binary_string(subnet_mask))
     subnet_cidr = sum([int(bit) for bit in subnet_mask_binary]) # possibly make function for these?
 
     # Calculate # subnets on network
-    num_subnets = 2 ** (subnet_cidr % 8)
+    #num_subnets = 2 ** (subnet_cidr % 8)
     #num_subnets = 2 ** ((32 - subnet_cidr) % 8)
+
+    class_b = False
+    if (subnet_cidr >= 24) and ip_addr_class == "B":
+        num_subnets = 2 ** (subnet_cidr - 16)
+        class_b = True
+    else:
+        num_subnets = 2 ** (subnet_cidr % 8)
 
     # hosts
     unmasked_bits = 32 - subnet_cidr
@@ -125,17 +135,18 @@ def get_subnet_stats(ip_addr, subnet_mask):
     valid_subnets = []
     subnet_base_ip = ip_addr.split(".")
 
+    # generate valid subnets
     i = 0
     while i <= mask_value:
         subnet_base_ip[index] = str(i)
         valid_subnets.append(".".join(subnet_base_ip))
         i += block_size
 
-    # calculate broadcast addresses
     broadcast_addresses = []
     broadcast_addr_value = block_size - 1
     subnet_base_ip = ip_addr.split(".") # reset subnet_base_ip
-
+    
+    # calculate broadcast addresses
     while (broadcast_addr_value) <= 255:
         subnet_base_ip[index] = str(broadcast_addr_value)
         remaining_bytes = index
@@ -147,6 +158,23 @@ def get_subnet_stats(ip_addr, subnet_mask):
             remaining_bytes += 1
         broadcast_addresses.append(".".join(subnet_base_ip))
         broadcast_addr_value += block_size
+
+    if class_b:
+        # generate valid subnets
+        new_valid_subnets = []
+        for i in range(256):
+            for subnet in valid_subnets:
+                subnet = subnet.split(".")
+                subnet[index-1] = str(i)
+                new_valid_subnets.append(".".join(subnet))
+        
+        new_broadcast_addresses = []
+        for k in range(256):
+            for broadcast_addr in broadcast_addresses:
+                broadcast_addr = broadcast_addr.split(".")
+                broadcast_addr[index-1] = str(k)
+                new_broadcast_addresses.append(".".join(broadcast_addr))
+
 
     # get first addresses
     first_addresses = []
@@ -171,7 +199,10 @@ def get_subnet_stats(ip_addr, subnet_mask):
     print(f"First Addresses: {first_addresses}\n")
     print(f"Last Addresses: {last_addresses}")
 
-    print([f"{ip_addr}/{subnet_cidr}", num_subnets, num_hosts_per_subnet, valid_subnets, broadcast_addresses, first_addresses, last_addresses])
+    #print(new_valid_subnets)
+    #print("##################")
+    #print(len(new_broadcast_addresses))
+    #print(new_broadcast_addresses)
 
     return [f"{ip_addr}/{subnet_cidr}", num_subnets, num_hosts_per_subnet, valid_subnets, broadcast_addresses, first_addresses, last_addresses]
 
@@ -237,19 +268,12 @@ def to_decimal_dot(ip_addr_list):
 
 
 def main():
-    # PART 2
-    get_subnet_stats("192.168.0.0","255.255.192.0")
+    # this is the cunty one
+    get_subnet_stats("136.10.0.0","255.255.255.224")
 
-    #print("CLASS B")
-    #get_subnet_stats("172.16.0.0", "255.255.255.252")
-    
-    #get_subnet_stats("138.188.0.0", "255.252.0.0")
-    #get_subnet_stats("136.24.0.0", "255.255.192.0") # works
+    #get_subnet_stats("192.168.10.0","255.255.255.192")
 
-    #get_subnet_stats("172.16.0.0", "255.255.192.0")
-    #get_subnet_stats("172.16.0.0", "255.255.255.240")
-
-
+    #get_subnet_stats("136.206.16.0", "255.255.255.192")
 
     # PART 4
     #get_supernet_stats(["205.100.0.0","205.100.1.0","205.100.2.0","205.100.3.0"])
