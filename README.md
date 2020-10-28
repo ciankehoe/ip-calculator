@@ -15,9 +15,3 @@
 - Thorough unit tests (pyunit)
 - Calculating subnets for Class A addresses (also Class B).
 - Supernetting Class B addresses.
-
-One final comment I want to make is with regards to subnetting Class B addresses. The only issue I ran into pertained to Class B addresses where the subnet mask went into the extra octet (i.e non-default subnet mask for Class B). Essentially, whether Class B addresses can be subnet to numbers higher than /24.
-
-In looking at your examples and methods, my first attempt resulted in a single (somewhat elegant) general case that worked for all Classes. However, upon further research and discussion, different results and a different method appeared to be the convention for this 'special' case. As such, I am still not 100% certain which output you would expect. (Overall, there is a high degree of discrepancy in resources online).
-
-You will see on ```line 210``` of **ip_calculator.py** that I have a check for whether a class_b flag has been set. This check, and the flag are in place assuming the latter convention I came across is what you expected. However, if you expected results where the extra octet is not dealt with for Class B addresses and non-default Class B subnet masks, this check can easily be removed and the following code block not executed. Thus, the output will reflect the original method we followed.

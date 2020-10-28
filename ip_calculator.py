@@ -8,7 +8,7 @@ def get_class_stats(ip_addr):
     Take in an IP address and returns the network
     class of that address, as well as details about
     that class.
-    :param ip_addr: A string representation of an IP 
+    :param ip_addr: A string representation of an IP
     address in decimal dot notation.
     :return: Network Class,
             Num of networs for class,
@@ -101,13 +101,13 @@ def get_class_stats(ip_addr):
 # Part 2 / 3
 def get_subnet_stats(ip_addr, subnet_mask):
     """
-    Take in an IP address and subnet mask, print/return the 
+    Take in an IP address and subnet mask, print/return the
     subnetting details for that combination
     of address and mask.
-    :param ip_addr: A string representation of an IP 
+    :param ip_addr: A string representation of an IP
     address in decimal dot notation.
-    :param subnet_mask: A string representation of a 
-    subnet mask in decimal dot notation. 
+    :param subnet_mask: A string representation of a
+    subnet mask in decimal dot notation.
     :return: IP addr in CIDR NOTATION,
             Num of networs on subnet,
             Num addressable hosts/subnet,
@@ -128,18 +128,8 @@ def get_subnet_stats(ip_addr, subnet_mask):
     #num_subnets = 2 ** (subnet_cidr % 8)
 
     # Calculate  the number of subnets on a network
-    # Had to add special case for Class B when the mask
-    # uses the last octet. We have a flag which is only set
-    # to True if the subnet mask goes into the final octet,
-    # and the IP is a class B address.
-    class_b = False
-    if (subnet_cidr >= 24) and ip_addr_class == "B":
-        num_subnets = 2 ** (subnet_cidr - 16)
-        class_b = True
-    else:
-        # get the remaining number of bits per byte that
-        # can create our subnets using % 8
-        num_subnets = 2 ** (subnet_cidr % 8)
+
+    num_subnets = 2 ** (subnet_cidr % 8)
 
     # calculate # hosts per subnet
     # the number of unmasked bits (0's) will simply
@@ -205,43 +195,6 @@ def get_subnet_stats(ip_addr, subnet_mask):
         broadcast_addresses.append(".".join(subnet_base_ip))
         broadcast_addr_value += block_size
 
-    # THIS CAN BE REMOVED AND PROGRAM WILL STILL FUNCTION.
-    # PLEASE SEE README :)
-    if class_b:
-        # generate all valid subnets for class B
-        # network with special case mask.
-        # for each "base" valid subnet, we need
-        # to generate a base set of these valid subnets
-        # per each possible value in the extra byte (255).
-        # e.g 256 * 8 valid base subnets == 2048 total valid
-        # subnets.
-        new_valid_subnets = []
-        for i in range(256):
-            for subnet in valid_subnets:
-                subnet = subnet.split(".")
-                subnet[index-1] = str(i)
-                new_valid_subnets.append(".".join(subnet))
-        # our final list of valid subnets now becomes the newly
-        # generated list in this special case.
-        valid_subnets = new_valid_subnets
-
-        # generate all valid broadcast addresses
-        # for class B network with special case mask.
-        # for each "base" broadcast addr, we need
-        # to generate a base set of these addresses
-        # per each possible value in the extra byte (255).
-        # e.g 256 * 8 valid base subnets == 2048 total.
-        new_broadcast_addresses = []
-        for k in range(256):
-            for broadcast_addr in broadcast_addresses:
-                broadcast_addr = broadcast_addr.split(".")
-                broadcast_addr[index-1] = str(k)
-                new_broadcast_addresses.append(".".join(broadcast_addr))
-        # our final list of broadcast addrs now becomes the newly
-        # generated list in this special case.
-        broadcast_addresses = new_broadcast_addresses
-
-
     # get first addresses
     #
     # for every valid subnet, we simple take the
@@ -289,14 +242,14 @@ def get_supernet_stats(list_addresses):
     e.g ["205.100.0.0","205.100.1.0",
     "205.100.2.0","205.100.3.0"]
     :return: Decimal dot strings of the supernet
-    address + network prefix, and the supernet mask. 
+    address + network prefix, and the supernet mask.
     """
     # convert our list of string decimal dot address
     # into a list of binary strings.
     list_addresses = ["".join(to_binary_string(entry)) for entry in list_addresses]
 
     # get the longest common prefix bits. The length of this
-    # is the network prefix. 
+    # is the network prefix.
     longest_common_prefix = os.path.commonprefix(list_addresses)
     network_prefix_size = len(longest_common_prefix)
 
@@ -363,6 +316,11 @@ def to_decimal_dot(ip_addr_list):
 
 if __name__ == "__main__":
     #main()
-    get_class_stats("192.168.2.1")
-    get_subnet_stats("136.10.0.0","255.255.255.224")
-    get_supernet_stats(["205.100.0.0","205.100.1.0","205.100.2.0","205.100.3.0"])
+    #get_class_stats("192.168.2.1")
+
+    # Class B /26 Example
+    get_subnet_stats("136.206.19.9","255.255.255.192")
+    # Class B /22 Example
+    #get_subnet_stats("136.206.19.9","255.255.252.0")
+
+    #get_supernet_stats(["205.100.0.0","205.100.1.0","205.100.2.0","205.100.3.0"])
